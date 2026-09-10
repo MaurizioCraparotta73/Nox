@@ -1,18 +1,17 @@
 import { i as __toESM } from "../_runtime.mjs";
 import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
+import { _ as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
-import { a as Share, c as Moon, d as LocateFixed, f as Eye, h as Cloud, i as Star, l as MonitorSmartphone, m as Download, o as Search, p as Droplets, r as Telescope, s as RefreshCw, t as Wind, u as MapPin } from "../_libs/lucide-react.mjs";
-import { a as useNoxStore, i as locKey, n as Route$1, o as getForecast, r as MILANO } from "./router-C5g-BOp2.mjs";
+import { n as Starfield, r as cn, t as Button } from "./starfield-Bem8dg_3.mjs";
+import { c as Moon, d as LocateFixed, f as Eye, h as Cloud, i as Star, m as Download, o as Search, p as Droplets, r as Telescope, s as RefreshCw, t as Wind, u as MapPin } from "../_libs/lucide-react.mjs";
+import { a as useNoxStore, i as locKey, n as Route$2, o as getForecast, r as MILANO } from "./router-Ef7_fTlW.mjs";
 import { n as QueryClientProvider, t as useQuery } from "../_libs/tanstack__react-query.mjs";
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
 import { n as format, t as it } from "../_libs/date-fns.mjs";
-import { n as clsx, t as cva } from "../_libs/class-variance-authority+clsx.mjs";
 import { a as CartesianGrid, i as Line, n as YAxis, o as ResponsiveContainer, r as XAxis, s as Tooltip, t as LineChart } from "../_libs/recharts+[...].mjs";
 import { t as _e } from "../_libs/cmdk.mjs";
-import { u as Slot } from "../_libs/@radix-ui/react-dialog+[...].mjs";
-import { t as twMerge } from "../_libs/tailwind-merge.mjs";
 import { a as Trigger, i as Root3, n as Portal, r as Provider, t as Content2 } from "../_libs/@radix-ui/react-tooltip+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-Dv_B3XoN.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-CGWrjH9j.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 /**
@@ -740,39 +739,6 @@ function scoreTone(score) {
 function percent(n) {
 	return `${Math.round(n)}%`;
 }
-function cn(...inputs) {
-	return twMerge(clsx(inputs));
-}
-var buttonVariants = cva("inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-[background-color,box-shadow,transform,color,opacity] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-40 active:not-disabled:scale-[0.96] [&_svg]:size-4 [&_svg]:shrink-0", {
-	variants: {
-		variant: {
-			default: "bg-primary text-primary-foreground hover:bg-primary/90",
-			ghost: "text-foreground hover:bg-muted",
-			outline: "bg-transparent text-foreground shadow-[var(--shadow-border)] hover:shadow-[var(--shadow-border-hover)]",
-			subtle: "bg-muted text-foreground hover:bg-muted/80"
-		},
-		size: {
-			default: "h-11 px-4",
-			sm: "h-9 px-3 text-sm",
-			icon: "size-11",
-			"icon-sm": "size-9"
-		}
-	},
-	defaultVariants: {
-		variant: "default",
-		size: "default"
-	}
-});
-function Button({ className, variant, size, asChild = false, ...props }) {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(asChild ? Slot : "button", {
-		className: cn(buttonVariants({
-			variant,
-			size,
-			className
-		})),
-		...props
-	});
-}
 function LocationSearch() {
 	const location = useNoxStore((s) => s.location);
 	const favorites = useNoxStore((s) => s.favorites);
@@ -984,119 +950,20 @@ function FavoriteButton() {
 	});
 }
 function InstallMacButton() {
-	const [open, setOpen] = (0, import_react.useState)(false);
-	const [busy, setBusy] = (0, import_react.useState)(false);
-	const [error, setError] = (0, import_react.useState)(null);
-	const [deferred, setDeferred] = (0, import_react.useState)(null);
-	const [standalone, setStandalone] = (0, import_react.useState)(false);
-	(0, import_react.useEffect)(() => {
-		const onPrompt = (event) => {
-			event.preventDefault();
-			setDeferred(event);
-		};
-		const onInstalled = () => setStandalone(true);
-		window.addEventListener("beforeinstallprompt", onPrompt);
-		window.addEventListener("appinstalled", onInstalled);
-		if (window.matchMedia("(display-mode: standalone)").matches) setStandalone(true);
-		return () => {
-			window.removeEventListener("beforeinstallprompt", onPrompt);
-			window.removeEventListener("appinstalled", onInstalled);
-		};
-	}, []);
-	(0, import_react.useEffect)(() => {
-		if (!open) return;
-		const onKey = (e) => {
-			if (e.key === "Escape") setOpen(false);
-		};
-		window.addEventListener("keydown", onKey);
-		return () => window.removeEventListener("keydown", onKey);
-	}, [open]);
-	async function downloadPackage() {
-		setBusy(true);
-		setError(null);
-		try {
-			const res = await fetch("/api/mac-app");
-			if (!res.ok) throw new Error("download");
-			const blob = await res.blob();
-			const href = URL.createObjectURL(blob);
-			const link = document.createElement("a");
-			link.href = href;
-			link.download = "Nox-Mac.zip";
-			document.body.appendChild(link);
-			link.click();
-			link.remove();
-			URL.revokeObjectURL(href);
-		} catch {
-			setError("Download non riuscito. Riprova tra poco.");
-		} finally {
-			setBusy(false);
-		}
-	}
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 		variant: "outline",
-		size: "icon",
-		onClick: () => setOpen(true),
-		"aria-label": "Installa su Mac",
-		title: "Installa su Mac",
-		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Download, { className: "size-4" })
-	}), open ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "fixed inset-0 z-50 flex items-start justify-center px-4 pt-[12vh]",
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-			type: "button",
-			"aria-label": "Chiudi",
-			className: "absolute inset-0 bg-background/70",
-			onClick: () => setOpen(false)
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "relative z-10 w-full max-w-lg rounded-xl bg-card p-5 shadow-[var(--shadow-border)] rise-in sm:p-6",
-			children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-					className: "text-xs font-medium uppercase tracking-wider text-subtle",
-					children: "MacBook Apple Silicon"
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
-					className: "mt-1 font-display text-2xl",
-					children: "Installa Nox"
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-					className: "mt-2 text-sm leading-relaxed text-muted-foreground",
-					children: "Pacchetto .app da trascinare in Applicazioni. Si apre in una finestra propria se hai Chrome, Brave o Edge."
-				}),
-				standalone ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-					className: "mt-4 text-sm text-good",
-					children: "Nox è già installato su questo dispositivo."
-				}) : null,
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
-					className: "mt-5 w-full",
-					onClick: downloadPackage,
-					disabled: busy,
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Download, { className: "size-4" }), busy ? "Preparazione…" : "Scarica Nox-Mac.zip"]
-				}),
-				error ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-					className: "mt-2 text-xs text-bad",
-					children: error
-				}) : null,
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("ol", {
-					className: "mt-5 space-y-2 text-sm text-muted-foreground",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { children: "1. Scompatta lo zip e trascina Nox in Applicazioni." }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { children: "2. Al primo avvio: clic destro → Apri → Apri." })]
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "mt-5 grid gap-2",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-						className: "text-xs font-medium uppercase tracking-wider text-subtle",
-						children: "Senza scaricare"
-					}), deferred ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-						type: "button",
-						onClick: () => deferred.prompt(),
-						className: cn("flex h-11 items-center gap-2 rounded-md px-3 text-left text-sm", "bg-muted hover:bg-muted/80"),
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MonitorSmartphone, { className: "size-4 text-subtle" }), "Installa dal browser"]
-					}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-						className: "flex items-start gap-2 text-sm text-muted-foreground",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Share, { className: "mt-0.5 size-4 shrink-0 text-subtle" }), "Safari 17+: File → Aggiungi al Dock. Resta nel Dock come un’app nativa."]
-					})]
-				})
-			]
-		})]
-	}) : null] });
+		asChild: true,
+		className: "shrink-0 px-3",
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Link, {
+			to: "/installa",
+			"aria-label": "Installa su Mac",
+			title: "Installa su Mac",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Download, { className: "size-4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+				className: "hidden sm:inline",
+				children: "Installa"
+			})]
+		})
+	});
 }
 function TooltipProvider({ children }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Provider, {
@@ -1462,12 +1329,6 @@ function Row({ label, children }) {
 		})]
 	});
 }
-function Starfield() {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-		className: "starfield",
-		"aria-hidden": "true"
-	});
-}
 function WeekStrip({ nights, activeId, onSelect }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
 		className: "font-display text-xl",
@@ -1616,9 +1477,13 @@ function NoxApp({ initialRaw }) {
 						onSelect: setSelectedId
 					})
 				] }) : null,
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("footer", {
-					className: "pb-8 pt-2 text-xs leading-relaxed text-subtle",
-					children: "Indice Nox: nubi (basse, medie, alte), seeing da 7Timer e vento, trasparenza, Luna, rugiada e precipitazioni. Cielo profondo pesa Luna e trasparenza; planetario pesa il seeing. Dati MET Norway e 7Timer. Non sostituisce l’osservazione dal campo."
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("footer", {
+					className: "flex flex-col gap-3 pb-8 pt-2 text-xs leading-relaxed text-subtle sm:flex-row sm:items-start sm:justify-between",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "Indice Nox: nubi (basse, medie, alte), seeing da 7Timer e vento, trasparenza, Luna, rugiada e precipitazioni. Cielo profondo pesa Luna e trasparenza; planetario pesa il seeing. Dati MET Norway e 7Timer. Non sostituisce l’osservazione dal campo." }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Link, {
+						to: "/installa",
+						className: "shrink-0 text-muted-foreground transition-colors duration-150 hover:text-foreground",
+						children: "Installa su Mac"
+					})]
 				})
 			]
 		})]
@@ -1654,7 +1519,7 @@ function LoadingState() {
 	});
 }
 function Home() {
-	const initialRaw = Route$1.useLoaderData();
+	const initialRaw = Route$2.useLoaderData();
 	const [client] = (0, import_react.useState)(() => new QueryClient({ defaultOptions: { queries: {
 		staleTime: 9e5,
 		retry: 1,

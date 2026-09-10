@@ -1,6 +1,60 @@
+import { APP_ICON_ICNS } from "./icon-bytes";
 import { buildZip, type ZipFile } from "./zip";
 
+const VERSION = "1.0";
+
 const text = (value: string) => new TextEncoder().encode(value.endsWith("\n") ? value : `${value}\n`);
+const raw = (value: string) => new TextEncoder().encode(value);
+
+function isLoopbackHost(host: string) {
+  const h = host.replace(/^\[|\]$/g, "").split("%")[0]!.toLowerCase();
+  return h === "localhost" || h === "127.0.0.1" || h === "0.0.0.0" || h === "::1" || h.endsWith(".local");
+}
+
+function hostnameOf(value: string) {
+  return value.trim().replace(/^https?:\/\//, "").split("/")[0]!.split(",")[0]!.trim();
+}
+
+export type AppTarget = {
+  url: string;
+  publicHost: boolean;
+  version: typeof VERSION;
+  filename: "Nox-Mac.zip";
+};
+
+export function resolveAppTarget(request: Request): AppTarget {
+  const published = hostnameOf(String(process.env.VITE_PUBLIC_HOSTNAME ?? ""));
+  if (published && /^[a-z0-9.-]+(?::\d+)?$/i.test(published) && !isLoopbackHost(published.split(":")[0]!)) {
+    return { url: `https://${published}`, publicHost: true, version: VERSION, filename: "Nox-Mac.zip" };
+  }
+
+  const forwarded = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const host = forwarded || request.headers.get("host") || new URL(request.url).host;
+  const hostName = host.split(":")[0]!;
+  const publicHost = !isLoopbackHost(hostName);
+  const proto =
+    request.headers.get("x-forwarded-proto") ||
+    (publicHost ? "https" : new URL(request.url).protocol.replace(":", "")) ||
+    "https";
+  return {
+    url: `${proto}://${host}`.replace(/\/$/, ""),
+    publicHost,
+    version: VERSION,
+    filename: "Nox-Mac.zip",
+  };
+}
+
+export function sanitizeAppUrl(url: string) {
+  const parsed = new URL(url);
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error("unsupported url");
+  }
+  parsed.hash = "";
+  parsed.username = "";
+  parsed.password = "";
+  const out = parsed.toString();
+  return out.endsWith("/") && parsed.pathname === "/" ? out.slice(0, -1) : out;
+}
 
 function infoPlist() {
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -13,6 +67,12 @@ function infoPlist() {
   <string>Nox</string>
   <key>CFBundleExecutable</key>
   <string>Nox</string>
+  <key>CFBundleGetInfoString</key>
+  <string>Nox ${VERSION} — previsioni per astrofotografia</string>
+  <key>CFBundleIconFile</key>
+  <string>AppIcon</string>
+  <key>CFBundleIconName</key>
+  <string>AppIcon</string>
   <key>CFBundleIdentifier</key>
   <string>me.grok.nox</string>
   <key>CFBundleInfoDictionaryVersion</key>
@@ -22,16 +82,20 @@ function infoPlist() {
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.0</string>
+  <string>${VERSION}</string>
   <key>CFBundleVersion</key>
   <string>1</string>
-  <key>LSMinimumSystemVersion</key>
-  <string>13.0</string>
+  <key>LSApplicationCategoryType</key>
+  <string>public.app-category.photography</string>
   <key>LSArchitecturePriority</key>
   <array>
     <string>arm64</string>
     <string>x86_64</string>
   </array>
+  <key>LSMinimumSystemVersion</key>
+  <string>13.0</string>
+  <key>LSMultipleInstancesProhibited</key>
+  <true/>
   <key>NSHighResolutionCapable</key>
   <true/>
   <key>NSRequiresAquaSystemAppearance</key>
@@ -41,73 +105,132 @@ function infoPlist() {
 `;
 }
 
-function launcher(url: string) {
-  const safe = url.replace(/[^a-zA-Z0-9:/._?&=+\-]/g, "");
+function launcher() {
   return `#!/bin/bash
-set -euo pipefail
-URL="${safe}"
+set -u
+DIR="$(cd "$(dirname "$0")" && pwd)"
+ROOT="$(cd "$DIR/../Resources" && pwd)"
+URL="$(/usr/bin/sed -n '1p' "$ROOT/url.txt" | /usr/bin/tr -d '\\r')"
 
-open_chrome_app() {
-  local app="$1"
-  /usr/bin/open -na "$app" --args --app="$URL" --new-window
+case "$URL" in
+  http://*|https://*) ;;
+  *)
+    /usr/bin/osascript -e 'display alert "Nox" message "Indirizzo dell’app non valido. Scarica di nuovo il pacchetto da Nox." as critical'
+    exit 1
+    ;;
+esac
+
+case "$URL" in
+  *://127.0.0.1*|*://localhost*|*://0.0.0.0*|*://[::1]*)
+    /usr/bin/osascript -e 'display alert "Nox" message "Questo pacchetto è stato creato dall’anteprima. Scaricalo di nuovo dalla versione pubblicata, così si apre l’indirizzo definitivo." as warning'
+    ;;
+esac
+
+find_browser() {
+  local appname
+  for appname in "Google Chrome" "Brave Browser" "Microsoft Edge" "Chromium" "Vivaldi" "Opera"; do
+    if [ -d "/Applications/\${appname}.app" ]; then
+      printf '%s\\n' "/Applications/\${appname}.app"
+      return 0
+    fi
+    if [ -d "$HOME/Applications/\${appname}.app" ]; then
+      printf '%s\\n' "$HOME/Applications/\${appname}.app"
+      return 0
+    fi
+  done
+  return 1
 }
 
-if [ -d "/Applications/Google Chrome.app" ]; then
-  open_chrome_app "Google Chrome"
-elif [ -d "/Applications/Brave Browser.app" ]; then
-  open_chrome_app "Brave Browser"
-elif [ -d "/Applications/Microsoft Edge.app" ]; then
-  open_chrome_app "Microsoft Edge"
-elif [ -d "/Applications/Chromium.app" ]; then
-  open_chrome_app "Chromium"
-else
-  /usr/bin/open "$URL"
+USER_DIR="$HOME/Library/Application Support/Nox"
+
+if BROWSER="$(find_browser)"; then
+  /usr/bin/open -na "$BROWSER" --args \\
+    --user-data-dir="$USER_DIR" \\
+    --app="$URL" \\
+    --no-first-run \\
+    --no-default-browser-check \\
+    --disable-default-apps \\
+    --window-size=1440,900
+  exit 0
 fi
+
+/usr/bin/open "$URL"
 `;
 }
 
-function instructions(url: string) {
-  return `Nox — previsioni per astrofotografia
-Pacchetto per MacBook Apple Silicon
+function instructionsHtml(url: string) {
+  return `<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nox — installazione Mac</title>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0; min-height: 100dvh; display: grid; place-items: center;
+      font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, sans-serif;
+      background: #09090b; color: #ececef; padding: 32px 20px;
+    }
+    main { max-width: 36rem; }
+    h1 { font-family: ui-serif, "Times New Roman", serif; font-size: 2rem; font-weight: 400; margin: 0 0 8px; }
+    p { color: #9b9ba3; margin: 0 0 16px; }
+    ol { margin: 0; padding-left: 1.2rem; color: #ececef; }
+    li { margin: 0 0 10px; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85em; color: #d4d8de; }
+    .meta { margin-top: 28px; font-size: 13px; color: #6e6e76; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Installa Nox</h1>
+    <p>Pacchetto per MacBook. Trascina l’app in Applicazioni e aprila dal Dock.</p>
+    <ol>
+      <li>Trascina <strong>Nox</strong> su <strong>Applicazioni</strong> (nella stessa cartella).</li>
+      <li>Apri Applicazioni, clic destro su Nox → <strong>Apri</strong> → Apri. Solo la prima volta: macOS avvisa perché l’app non è firmata con un Developer ID Apple.</li>
+      <li>Se Chrome, Brave o Edge sono installati, Nox si apre in una finestra propria, senza barre del browser.</li>
+    </ol>
+    <p class="meta">App online: <code>${url.replace(/</g, "")}</code><br />Se l’indirizzo è locale, scarica di nuovo il pacchetto dalla versione pubblicata.</p>
+  </main>
+</body>
+</html>
+`;
+}
+
+function instructionsText(url: string) {
+  return `Nox ${VERSION} — previsioni per astrofotografia
+Pacchetto per MacBook (Apple Silicon e Intel)
 
 App online
 ${url}
 
 Installazione
-1. Fai doppio clic su questo archivio per scompattarlo.
-2. Trascina Nox.app nella cartella Applicazioni.
-3. Al primo avvio: clic destro su Nox → Apri → Apri.
+1. Trascina Nox.app sull’alias Applicazioni.
+2. Al primo avvio: clic destro su Nox → Apri → Apri.
    macOS avvisa perché l’app non è firmata con un Developer ID Apple.
+3. Con Chrome, Brave o Edge, Nox si apre in una finestra propria.
 
-Se Chrome, Brave o Edge sono installati, Nox si apre in una finestra propria.
+Se Gatekeeper blocca ancora l’app, da Terminale:
+  xattr -cr /Applications/Nox.app
 
 Senza questo file, da Safari 17 o successivo:
-File → Aggiungi al Dock
+  File → Aggiungi al Dock
 `;
 }
 
-export function publicAppUrl(request: Request) {
-  const published = String(process.env.VITE_PUBLIC_HOSTNAME ?? "")
-    .trim()
-    .replace(/^https?:\/\//, "")
-    .split("/")[0];
-  if (published && /^[a-z0-9.-]+$/i.test(published) && published.includes(".")) {
-    return `https://${published}`;
-  }
-  const forwarded = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
-  const host = forwarded || new URL(request.url).host;
-  const proto = request.headers.get("x-forwarded-proto") || new URL(request.url).protocol.replace(":", "") || "https";
-  return `${proto}://${host}`.replace(/\/$/, "");
-}
-
 export function buildMacAppZip(url: string) {
-  const root = "Nox-Mac";
+  const safe = sanitizeAppUrl(url);
+  const root = "Nox";
   const app = `${root}/Nox.app/Contents`;
   const files: ZipFile[] = [
-    { name: `${root}/ISTRUZIONI.txt`, data: text(instructions(url)) },
+    { name: `${root}/Istruzioni.html`, data: text(instructionsHtml(safe)) },
+    { name: `${root}/Istruzioni.txt`, data: text(instructionsText(safe)) },
+    { name: `${root}/Applicazioni`, data: raw("/Applications"), symlink: true },
     { name: `${app}/Info.plist`, data: text(infoPlist()) },
-    { name: `${app}/PkgInfo`, data: new TextEncoder().encode("APPL????") },
-    { name: `${app}/MacOS/Nox`, data: text(launcher(url)), executable: true },
+    { name: `${app}/PkgInfo`, data: raw("APPL????") },
+    { name: `${app}/MacOS/Nox`, data: text(launcher()), executable: true },
+    { name: `${app}/Resources/AppIcon.icns`, data: new Uint8Array(APP_ICON_ICNS) },
+    { name: `${app}/Resources/url.txt`, data: text(safe) },
   ];
   return buildZip(files);
 }

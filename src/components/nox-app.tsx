@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { RefreshCw } from "lucide-react";
 import { buildForecast, fetchWeather } from "@/lib/weather/api";
 import { MILANO, useNoxStore } from "@/lib/weather/store";
@@ -104,10 +105,18 @@ export function NoxApp({ initialRaw }: { initialRaw: WeatherRaw | null }) {
             </>
           ) : null}
 
-          <footer className="pb-8 pt-2 text-xs leading-relaxed text-subtle">
-            Indice Nox: nubi (basse, medie, alte), seeing da 7Timer e vento, trasparenza, Luna, rugiada e
-            precipitazioni. Cielo profondo pesa Luna e trasparenza; planetario pesa il seeing. Dati MET Norway e
-            7Timer. Non sostituisce l’osservazione dal campo.
+          <footer className="flex flex-col gap-3 pb-8 pt-2 text-xs leading-relaxed text-subtle sm:flex-row sm:items-start sm:justify-between">
+            <p>
+              Indice Nox: nubi (basse, medie, alte), seeing da 7Timer e vento, trasparenza, Luna, rugiada e
+              precipitazioni. Cielo profondo pesa Luna e trasparenza; planetario pesa il seeing. Dati MET Norway e
+              7Timer. Non sostituisce l’osservazione dal campo.
+            </p>
+            <Link
+              to="/installa"
+              className="shrink-0 text-muted-foreground transition-colors duration-150 hover:text-foreground"
+            >
+              Installa su Mac
+            </Link>
           </footer>
         </div>
       </div>

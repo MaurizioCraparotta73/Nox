@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as InstallaRouteImport } from './routes/installa'
 import { Route as ApiMacAppRouteImport } from './routes/api/mac-app'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InstallaRoute = InstallaRouteImport.update({
+  id: '/installa',
+  path: '/installa',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMacAppRoute = ApiMacAppRouteImport.update({
@@ -25,27 +31,31 @@ const ApiMacAppRoute = ApiMacAppRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/installa': typeof InstallaRoute
   '/api/mac-app': typeof ApiMacAppRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/installa': typeof InstallaRoute
   '/api/mac-app': typeof ApiMacAppRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/installa': typeof InstallaRoute
   '/api/mac-app': typeof ApiMacAppRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/mac-app'
+  fullPaths: '/' | '/installa' | '/api/mac-app'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/mac-app'
-  id: '__root__' | '/' | '/api/mac-app'
+  to: '/' | '/installa' | '/api/mac-app'
+  id: '__root__' | '/' | '/installa' | '/api/mac-app'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  InstallaRoute: typeof InstallaRoute
   ApiMacAppRoute: typeof ApiMacAppRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/installa': {
+      id: '/installa'
+      path: '/installa'
+      fullPath: '/installa'
+      preLoaderRoute: typeof InstallaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/mac-app': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  InstallaRoute: InstallaRoute,
   ApiMacAppRoute: ApiMacAppRoute,
 }
 export const routeTree = rootRouteImport

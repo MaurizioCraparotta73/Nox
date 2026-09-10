@@ -14,7 +14,7 @@ function crc32(data: Uint8Array) {
 }
 
 function dosTime(date: Date) {
-  const time = ((date.getHours() & 0x1f) << 11) | ((date.getMinutes() & 0x3f) << 5) | ((Math.floor(date.getSeconds() / 2) & 0x1f));
+  const time = ((date.getHours() & 0x1f) << 11) | ((date.getMinutes() & 0x3f) << 5) | (Math.floor(date.getSeconds() / 2) & 0x1f);
   const day = ((date.getFullYear() - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate();
   return { time, day };
 }
@@ -23,6 +23,7 @@ export type ZipFile = {
   name: string;
   data: Uint8Array;
   executable?: boolean;
+  symlink?: boolean;
 };
 
 function concat(chunks: Uint8Array[]) {
@@ -34,6 +35,11 @@ function concat(chunks: Uint8Array[]) {
     o += c.length;
   }
   return out;
+}
+
+function unixMode(file: ZipFile) {
+  if (file.symlink) return 0o120777 << 16;
+  return (file.executable ? 0o100755 : 0o100644) << 16;
 }
 
 export function buildZip(files: ZipFile[]) {
@@ -48,7 +54,7 @@ export function buildZip(files: ZipFile[]) {
     const data = file.data;
     const crc = crc32(data);
     const flags = 1 << 11;
-    const mode = (file.executable ? 0o100755 : 0o100644) << 16;
+    const mode = unixMode(file);
     const local = new Uint8Array(30 + name.length);
     const lv = new DataView(local.buffer);
     lv.setUint32(0, 0x04034b50, true);

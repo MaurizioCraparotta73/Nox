@@ -82,6 +82,19 @@ var createLucideIcon = (iconName, iconNode) => {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var ArrowLeft = createLucideIcon("arrow-left", [["path", {
+	d: "m12 19-7-7 7-7",
+	key: "1l729n"
+}], ["path", {
+	d: "M19 12H5",
+	key: "x3x0zl"
+}]]);
+/**
+* @license lucide-react v0.510.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Cloud = createLucideIcon("cloud", [["path", {
 	d: "M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z",
 	key: "p7xjir"
@@ -389,4 +402,4 @@ var Wind = createLucideIcon("wind", [
 	}]
 ]);
 //#endregion
-export { Share as a, Moon as c, LocateFixed as d, Eye as f, Cloud as h, Star as i, MonitorSmartphone as l, Download as m, TriangleAlert as n, Search as o, Droplets as p, Telescope as r, RefreshCw as s, Wind as t, MapPin as u };
+export { Share as a, Moon as c, LocateFixed as d, Eye as f, ArrowLeft as g, Cloud as h, Star as i, MonitorSmartphone as l, Download as m, TriangleAlert as n, Search as o, Droplets as p, Telescope as r, RefreshCw as s, Wind as t, MapPin as u };
