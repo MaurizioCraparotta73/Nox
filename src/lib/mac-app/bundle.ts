@@ -110,19 +110,40 @@ function launcher() {
 set -u
 DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$DIR/../Resources" && pwd)"
+SUPPORT="$HOME/Library/Application Support/Nox"
+SAVED="$SUPPORT/launch-url.txt"
 URL="$(/usr/bin/sed -n '1p' "$ROOT/url.txt" | /usr/bin/tr -d '\\r')"
 
-case "$URL" in
-  http://*|https://*) ;;
-  *)
-    /usr/bin/osascript -e 'display alert "Nox" message "Indirizzo dell’app non valido. Scarica di nuovo il pacchetto da Nox." as critical'
-    exit 1
-    ;;
-esac
+mkdir -p "$SUPPORT"
+
+is_bad() {
+  case "$1" in
+    https://*[a-zA-Z0-9]*)
+      case "$1" in
+        *://127.0.0.1*|*://localhost*|*://0.0.0.0*|*://[::1]*) return 0 ;;
+        *) return 1 ;;
+      esac
+      ;;
+    *) return 0 ;;
+  esac
+}
+
+if is_bad "$URL" && [ -f "$SAVED" ]; then
+  URL="$(/usr/bin/sed -n '1p' "$SAVED" | /usr/bin/tr -d '\\r')"
+fi
+
+if is_bad "$URL"; then
+  URL="$(/usr/bin/osascript -e 'try' -e 'text returned of (display dialog "Incolla l indirizzo pubblicato di Nox:" default answer "https://" with title "Nox" buttons {"Annulla","Apri"} default button "Apri")' -e 'on error' -e 'return ""' -e 'end try')"
+  URL="$(printf '%s' "$URL" | /usr/bin/tr -d '\\r')"
+fi
 
 case "$URL" in
-  *://127.0.0.1*|*://localhost*|*://0.0.0.0*|*://[::1]*)
-    /usr/bin/osascript -e 'display alert "Nox" message "Questo pacchetto è stato creato dall’anteprima. Scaricalo di nuovo dalla versione pubblicata, così si apre l’indirizzo definitivo." as warning'
+  https://*[a-zA-Z0-9]*)
+    printf '%s\\n' "$URL" > "$SAVED"
+    ;;
+  *)
+    /usr/bin/osascript -e 'display alert "Nox" message "Serve l indirizzo della versione pubblicata (https)." as critical'
+    exit 1
     ;;
 esac
 
@@ -141,7 +162,7 @@ find_browser() {
   return 1
 }
 
-USER_DIR="$HOME/Library/Application Support/Nox"
+USER_DIR="$SUPPORT/browser"
 
 if BROWSER="$(find_browser)"; then
   /usr/bin/open -na "$BROWSER" --args \\
@@ -190,28 +211,23 @@ function instructionsHtml(url: string) {
       <li>Apri Applicazioni, clic destro su Nox → <strong>Apri</strong> → Apri. Solo la prima volta: macOS avvisa perché l’app non è firmata con un Developer ID Apple.</li>
       <li>Se Chrome, Brave o Edge sono installati, Nox si apre in una finestra propria, senza barre del browser.</li>
     </ol>
-    <p class="meta">App online: <code>${url.replace(/</g, "")}</code><br />Se l’indirizzo è locale, scarica di nuovo il pacchetto dalla versione pubblicata.</p>
+    <p class="meta">Se al primo avvio Nox chiede un indirizzo, incolla quello della versione pubblicata (https).</p>
   </main>
 </body>
 </html>
 `;
 }
 
-function instructionsText(url: string) {
+function instructionsText(_url: string) {
   return `Nox ${VERSION} — previsioni per astrofotografia
 Pacchetto per MacBook (Apple Silicon e Intel)
-
-App online
-${url}
 
 Installazione
 1. Trascina Nox.app sull’alias Applicazioni.
 2. Al primo avvio: clic destro su Nox → Apri → Apri.
    macOS avvisa perché l’app non è firmata con un Developer ID Apple.
-3. Con Chrome, Brave o Edge, Nox si apre in una finestra propria.
-
-Se Gatekeeper blocca ancora l’app, da Terminale:
-  xattr -cr /Applications/Nox.app
+3. Se compare una finestra, incolla l’indirizzo della versione pubblicata di Nox.
+4. Con Chrome, Brave o Edge, Nox si apre in una finestra propria.
 
 Senza questo file, da Safari 17 o successivo:
   File → Aggiungi al Dock
