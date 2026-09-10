@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Nox",
+      "hasCanvas": false,
+      "bodyTextLen": 1374,
+      "bodyTextHash": "5303c44f1672dcf20fe5bc3570fdba714fc6fef8359ed2d213bafdcccd4193bf",
+      "bodyTextPrefix": "Nox Previsioni per astrofotografia Milano · Lombardia Ctrl K Cie",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Nox",
+      "hasCanvas": false,
+      "bodyTextLen": 1337,
+      "bodyTextHash": "39572293a30194c8e9a8be936df8bd47d30c07353b0f94f3d5f81a3c09061c91",
+      "bodyTextPrefix": "Nox Previsioni per astrofotografia Milano · Lombardia Cielo prof",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}
